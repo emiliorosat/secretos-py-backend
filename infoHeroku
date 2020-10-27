@@ -1,0 +1,13 @@
+agregar el runtime:
+runtime.txt : python-3.9.0
+
+agregar requirements.txt:
+requirements.txt: dependencias==version
+$ pip freeze > requirements.txt
+
+agregar Procfile:
+web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app
+
+instalar gunicorn:
+$ pip install gunicorn
+$ pip freeze > requirements.txt
