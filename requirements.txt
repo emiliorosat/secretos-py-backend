@@ -5,4 +5,8 @@ python-dotenv==0.14.0
 fastapi==0.61.1
 peewee==3.13.3
 gunicorn==20.0.4
+<<<<<<< HEAD
 python-multipart==0.0.5
+=======
+python-multipart==0.0.5
+>>>>>>> bc5753f95e251f00524f8b5bede77bd3076ff5a9
