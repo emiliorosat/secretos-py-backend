@@ -1,0 +1,38 @@
+
+# rutas api
+
+usuario:
+registrar - post - /users/register - 201
+iniciar sesion - post - /users/login - 200
+modificar - put - /users/update - 201
+cambiar clave - put - /users/password - 201
+cerrar sesion - get - /users/logout/{id} - 200
+
+secretos:
+ver todos - get - /secrets/ - 200
+eliminar - delete - /secrets/{id} - 200
+agregar - post - /secrets/ - 201
+
+# modelo
+
+usuario:
+id - guid
+nombre - string
+correo - string
+clave - hash string
+
+secreto:
+id - guid
+titulo - string
+descripcion - string
+valor - double
+fecha - date
+lugar - string
+latitud - float
+longitud - float
+
+log:
+securityToken
+userId
+created
+lastLogin
