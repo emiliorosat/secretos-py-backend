@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from uuid import UUID, uuid4
 from models import User, Secret, UserAccess, UserIdentity
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from datetime import datetime
+from datetime import datetime, date
 import userController
 import db
 
@@ -18,24 +18,25 @@ origins = [
     "http://localhost",
     "http://localhost:8000",
     "https://localhost",
+    "http://localhost:4200"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
 
 #Usuarios
-@app.post("/users/register", tags=["users"])
+@app.post("/api/users/register", tags=["users"])
 def userRegister(user: UserAccess ):
     return userController.addNewUser(user)
 
-@app.post("/users/login", tags=["users"])
+@app.post("/api/users/login", tags=["users"])
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = db.User.select().where(db.User.UserName == form_data.username).get()
     if not user:
@@ -49,9 +50,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
                 FullName=user.FullName,
                 Disabled=user.Disabled
                 ))
+        print(token)
         return {"access_token": token, "token_type": "bearer"}
     else: 
         print("No Coinciden las Password")
+        return HTTPException(status_code=400, detail="Incorrect username or password")
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = userController.checkToken(token)
@@ -68,9 +71,10 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user["user"]
 
-@app.get("/users/me", tags=["users"])
+@app.get("/api/users/me", tags=["users"])
 def getUser( currentUser: User = Depends(get_current_active_user) ):
-        return currentUser
+    userInDb = db.User.select().where(db.User.Id == currentUser["Id"]).get()
+    return UserIdentity(Id=userInDb.Id, UserName = userInDb.UserName, Email=userInDb.Email, FullName=userInDb.FullName, Disabled=userInDb.Disabled)
 
 async def IsValidToken(user: User = Depends(get_current_user)):
     now = datetime.now().timestamp()
@@ -82,10 +86,10 @@ async def IsValidToken(user: User = Depends(get_current_user)):
         return { "user": None, "status": False }
 
 
-@app.put("/users/update", tags=["users"])
+@app.put("/api/users/update", tags=["users"])
 def userUpdate(user: User, isValid = Depends(IsValidToken)):
     if isValid["status"]:
-        userInDb = db.User.select().where(db.User.UserName == isValid["user"]["UserName"]).get()
+        userInDb = db.User.select().where(db.User.Id == isValid["user"]["Id"]).get()
         userUpdated = 0
         if userInDb.Email != user.Email and userInDb.FullName != user.FullName:
             userUpdated = (db.User.update(Email=user.Email, FullName=user.FullName ).where(db.User.Id == userInDb.Id).execute() )
@@ -93,14 +97,13 @@ def userUpdate(user: User, isValid = Depends(IsValidToken)):
             userUpdated = ( db.User.update(FullName=user.FullName).where(db.User.Id == userInDb.Id).execute() )
         elif userInDb.Email != user.Email:
             userUpdated = (db.User.update(Email=user.Email).where(db.User.Id == userInDb.Id).execute() )
-        print(userUpdated)
         if userUpdated == 1:
             return {"status": True, "message": "User Updated"}
         else:
             return {"status": True, "message": "User No Updated"}
     return {"status": False}
 
-@app.put("/users/password", tags=["users"])
+@app.put("/api/users/password", tags=["users"])
 def userPasswordUpdate(user: UserAccess, token = Depends(IsValidToken)):
     if token["status"]:
         userInDb = db.User.select().where(db.User.UserName == token["user"]["UserName"]).get()
@@ -118,25 +121,26 @@ def userPasswordUpdate(user: UserAccess, token = Depends(IsValidToken)):
     return {"status": False}
 
 
-@app.get("/users/logout", tags=["users"])
-def userLogout(token = Depends(IsValidToken)):
-    if token["status"]:
-        return {"status": True}
+@app.get("/api/users/logout", tags=["users"])
+def userLogout(token: str = Depends(oauth2_scheme)):
+    ok = db.TokenDisabled.create(Token = token, Date = datetime.now())
+    ok.save()
     return 
 
 
 #Secretos
-@app.get("/secrets", tags=["secrets"])
+@app.get("/api/secrets", tags=["secrets"])
 def GetAllSecrets(token = Depends(IsValidToken)):
     if token["status"]:
-        allSecrets = db.Secret.select().where(db.Secret.UserId == token["user"]["Id"]).get()
+        allSecrets = db.Secret().select().filter(db.Secret.UserId == token["user"]["Id"] ).dicts()
+
         if allSecrets:
-            return allSecrets
+            return tuple(allSecrets)
         else:
             return {"message": "No hay Secretos Registrados"}
     return {"message": "Usuario No Valido"}
 
-@app.post("/secrets", tags=["secrets"])
+@app.post("/api/secrets", tags=["secrets"])
 def addSecret(secret: Secret, token = Depends(IsValidToken)):
     if token["status"]:
         newSecret = db.Secret.create(
@@ -154,7 +158,7 @@ def addSecret(secret: Secret, token = Depends(IsValidToken)):
         return {"message": "Secreto Creado Con Exito"}
     return {"message": "Usuario No Valido"}
 
-@app.delete("/secrets/{id}", tags=["secrets"])
+@app.delete("/api/secrets/{id}", tags=["secrets"])
 def secretDelete(id: UUID, token = Depends(IsValidToken)):
     if token["status"]:
         db.Secret.delete().where(db.Secret.Id == id).execute()

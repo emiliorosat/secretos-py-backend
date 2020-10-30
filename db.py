@@ -28,6 +28,10 @@ class Secret (BaseModel):
     Lat = FloatField()
     Lng = FloatField()
 
+class TokenDisabled(BaseModel):
+    Token = CharField()
+    Date = DateField()
+
 
 db.connect()
-db.create_tables([User, Secret])
+db.create_tables([User, Secret, TokenDisabled])

@@ -23,8 +23,8 @@ class UserIdentity (User):
 
 
 class Secret (BaseModel):
-    Id: str
-    UserId: str
+    Id: Optional[str] = None
+    UserId: Optional[str] = None
     Titulo: str
     Description: str
     Value: float
