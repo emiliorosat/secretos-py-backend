@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, date
 import userController
 import db
+import os
 
 app = FastAPI(
     title="Api Vaul de Secretos",
@@ -30,6 +31,11 @@ app.add_middleware(
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
+-------------------------------------------------------------------------------------
+@app.get("/api/env")
+def getenvkeys():
+    return os.environ.keys()
+-----------------------------------------------------------------------------------
 
 #Usuarios
 @app.post("/api/users/register", tags=["users"])
