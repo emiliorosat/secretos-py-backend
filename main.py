@@ -25,7 +25,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -83,7 +83,7 @@ async def IsValidToken(user: User = Depends(get_current_user)):
     if leftTime >= 0:
         return { "user": user["user"], "status": True }
     else:
-        return { "user": None, "status": False }
+        return { "user": None, "status": False, "message": "token expirado" }
 
 
 @app.put("/api/users/update", tags=["users"])
@@ -101,7 +101,7 @@ def userUpdate(user: User, isValid = Depends(IsValidToken)):
             return {"status": True, "message": "User Updated"}
         else:
             return {"status": True, "message": "User No Updated"}
-    return {"status": False}
+    return isValid
 
 @app.put("/api/users/password", tags=["users"])
 def userPasswordUpdate(user: UserAccess, token = Depends(IsValidToken)):
@@ -118,7 +118,7 @@ def userPasswordUpdate(user: UserAccess, token = Depends(IsValidToken)):
                 return {"status": True, "message": "Password No Updated"}
         else:
             return {"status": True, "message": "Password No Updated"}
-    return {"status": False}
+    return token
 
 
 @app.get("/api/users/logout", tags=["users"])
@@ -138,7 +138,7 @@ def GetAllSecrets(token = Depends(IsValidToken)):
             return tuple(allSecrets)
         else:
             return {"message": "No hay Secretos Registrados"}
-    return {"message": "Usuario No Valido"}
+    return token
 
 @app.post("/api/secrets", tags=["secrets"])
 def addSecret(secret: Secret, token = Depends(IsValidToken)):
@@ -156,12 +156,12 @@ def addSecret(secret: Secret, token = Depends(IsValidToken)):
             )
         newSecret.save()
         return {"message": "Secreto Creado Con Exito"}
-    return {"message": "Usuario No Valido"}
+    return token
 
 @app.delete("/api/secrets/{id}", tags=["secrets"])
 def secretDelete(id: UUID, token = Depends(IsValidToken)):
     if token["status"]:
         db.Secret.delete().where(db.Secret.Id == id).execute()
         return {"message": "Secreto Eliminado Con Exito"}
-    return {"message": "Usuario No Valido"}
+    return token
     
