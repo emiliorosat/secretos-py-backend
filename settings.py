@@ -1,18 +1,18 @@
-from dotenv import load_dotenv
-import dotenv
-import os
-import sys
+#from dotenv import load_dotenv
+#import dotenv
+#import os
+#import sys
 
-is_prod = os.environ.get('IS_HEROKU', None)
-load_dotenv()
+#is_prod = os.environ.get('IS_HEROKU', None)
+#load_dotenv()
 
-jwtSecret = os.environ.get('JWT_SECRET') or os.getenv("JWT_SECRET")
+#jwtSecret = os.environ.get('JWT_SECRET') or os.getenv("JWT_SECRET")
 
-env = dotenv.dotenv_values()
-if(jwtSecret == None):
-    jwtSecret = env["JWT_SECRET"].encode("utf-8")
+#env = dotenv.dotenv_values()
+#if(jwtSecret == None):
+    #j#wtSecret = env["JWT_SECRET"].encode("utf-8")
 
-print(jwtSecret)
+#print(jwtSecret)
 #print( env["JWT_SECRET"] )
 
 #if is_prod:

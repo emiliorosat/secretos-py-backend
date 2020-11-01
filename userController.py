@@ -1,4 +1,4 @@
-from settings import jwtSecret
+import os
 import db
 from jwt import encode, decode
 from datetime import time, datetime
@@ -6,6 +6,7 @@ from bcrypt import hashpw, gensalt, checkpw
 from models import User, UserAccess, UserIdentity
 from uuid import uuid4, UUID
 
+jwtSecret = os.environ.get("JWT_SECRET")
 
 def encodePassword(password: str):
     return hashpw(password.encode("utf-8"), gensalt())
