@@ -34,7 +34,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
 #-------------------------------------------------------------------------------------
 @app.get("/api/env")
 def getenvkeys():
-    return os.environ.keys()
+    return tuple( os.environ.keys() )
 #-----------------------------------------------------------------------------------
 
 #Usuarios
