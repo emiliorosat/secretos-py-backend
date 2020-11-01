@@ -4,6 +4,11 @@ import os
 
 load_dotenv()
 
-jwtSecret = os.getenv("JWT_SECRET")
+print(os.environ.keys())
 
+
+jwtSecret = os.environ("JWT_SECRET")
+
+if(jwtSecret == None):
+    jwtSecret = os.getenv("JWT_SECRET")
 
